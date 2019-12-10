@@ -31,10 +31,7 @@ public class zManager_SSL {
 
     public zManager_SSL(int port) throws IOException {
     	
-    	System.setProperty("javax.net.debug", "ssl,handshake");
-        System.setProperty("javax.net.ssl.keyStore", KeystorePath);
-        System.setProperty("javax.net.ssl.keyStorePassword", KeystorePassword);
-        System.setProperty("javax.net.ssl.keyStoreType", "PKCS12" );
+    	SetSystemProperty();
         ServerSocketFactory factory = SSLServerSocketFactory.getDefault();
         _ServerSocket = (SSLServerSocket) factory.createServerSocket(port);
         _ServerSocket.setEnabledProtocols(new String[] {"TLSv1"});
@@ -44,7 +41,7 @@ public class zManager_SSL {
     
     public void listen() throws IOException {
         while (true) {
-        	System.out.println("Waiting for Client...");
+        	CONFIG.print("Waiting for Client...");
             _Socket = (SSLSocket) _ServerSocket.accept();
             CONFIG.print("PI->" + _Socket);
             zPI_SSL st = new zPI_SSL(_Socket);
@@ -52,18 +49,25 @@ public class zManager_SSL {
         }
     }
     
-    public PrivateKey readPrivateKey(String filename) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException
-    {
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(readFileBytes(filename));
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePrivate(keySpec);     
-    }
+    private void SetSystemProperty() {
+    	System.setProperty("javax.net.debug", "ssl,handshake");
+        System.setProperty("javax.net.ssl.keyStore", KeystorePath);
+        System.setProperty("javax.net.ssl.keyStorePassword", KeystorePassword);
+        System.setProperty("javax.net.ssl.keyStoreType", "PKCS12" );		
+	}
     
-    public byte[] readFileBytes(String filename) throws IOException
-    {
-        Path path = Paths.get(filename);
-        return Files.readAllBytes(path);        
-    }
+//    public PrivateKey readPrivateKey(String filename) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException
+//    {
+//        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(readFileBytes(filename));
+//        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+//        return keyFactory.generatePrivate(keySpec);     
+//    }
+//    
+//    public byte[] readFileBytes(String filename) throws IOException
+//    {
+//        Path path = Paths.get(filename);
+//        return Files.readAllBytes(path);        
+//    }
 
 
 }

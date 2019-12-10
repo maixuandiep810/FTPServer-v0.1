@@ -47,24 +47,13 @@ public class PI extends Thread {
 	        	Command = Request.split("\\s")[0];
 	        	switch (Command) {
 	        	
-				case "USER":
+	        	case "USER":
 					user.setUsername(Request.split("\\s")[1]);
-					if (checkLogin(user)) {
-						BufferUtil.Write(_BwPI, "331 User " + user.getUsername() + " OK. Password required");
-	    			}
-	    			else {
-	    				BufferUtil.Write(_BwPI, "500 USER: Operation not permitted");
-	    			}
+					zCommand.USERcommand(user, _BwPI);
 					break;
 				case "PASS":
 					user.setPassword(Request.split("\\s")[1]);
-					if (checkLogin(user)) {
-						BufferUtil.Write(_BwPI, "230-Your bandwidth usage is restricted");
-						BufferUtil.Write(_BwPI,  "230 Current directory is /");
-	    			}
-	    			else {
-	    				BufferUtil.Write(_BwPI, "500 USER: Operation not permitted");
-	    			}
+					zCommand.PASScommand(user, _BwPI);
 					break;
 				case "SYST":
 					BufferUtil.Write(_BwPI, "215 " + System.getProperty("os.name"));
@@ -126,10 +115,6 @@ public class PI extends Thread {
 			CONFIG.print(e.toString());
 		}
     	
-    }
-    
-    private boolean checkLogin(User user) {
-    	return true;
     }
     
     private void PORTCommand () throws IOException {

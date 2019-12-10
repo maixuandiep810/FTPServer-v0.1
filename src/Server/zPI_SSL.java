@@ -21,11 +21,10 @@ public class zPI_SSL extends Thread {
 	public static int NumOfPI = 0;
     private SSLSocket _SocketPI = null;
     private zDTP_SSL _DTP = null;
-    private SSLSocket _SocketDTP = null;
+
     private BufferedReader _BrPI = null;
     private BufferedWriter _BwPI = null;
-    private BufferedReader _BrDTP = null;
-    private BufferedWriter _BwDTP = null;
+
     private String _UserToken;
     private String _UserSession;
     
@@ -38,7 +37,7 @@ public class zPI_SSL extends Thread {
     } 
     
     public void run() {
-    	System.out.println("Helu");
+
     	try {
 			BufferUtil.Write(_BwPI, "220 Connection established");
 			String Request = null;
@@ -52,77 +51,46 @@ public class zPI_SSL extends Thread {
 	        	
 				case "USER":
 					user.setUsername(Request.split("\\s")[1]);
-					if (checkLogin(user)) {
-						BufferUtil.Write(_BwPI, "331 User " + user.getUsername() + " OK. Password required");
-	    			}
-	    			else {
-	    				BufferUtil.Write(_BwPI, "500 USER: Operation not permitted");
-	    			}
+					zCommand.USERcommand(user, _BwPI);
 					break;
 				case "PASS":
 					user.setPassword(Request.split("\\s")[1]);
-					if (checkLogin(user)) {
-						BufferUtil.Write(_BwPI, "230-Your bandwidth usage is restricted");
-						BufferUtil.Write(_BwPI,  "230 Current directory is /");
-	    			}
-	    			else {
-	    				BufferUtil.Write(_BwPI, "500 USER: Operation not permitted");
-	    			}
+					zCommand.PASScommand(user, _BwPI);
 					break;
 				case "SYST":
-					BufferUtil.Write(_BwPI, "215 " + System.getProperty("os.name"));
+					zCommand.SYSTcommand(_BwPI);
 				case "FEAT":
-					BufferUtil.Write(_BwPI, "211-Features:");
-					BufferUtil.Write(_BwPI, "AUTH PLAIN");
-					BufferUtil.Write(_BwPI, "CCC");
-					BufferUtil.Write(_BwPI, "CLNT");
-					BufferUtil.Write(_BwPI, "EPRT");
-					BufferUtil.Write(_BwPI, "PASV");
-					BufferUtil.Write(_BwPI, "211 End");					
+					zCommand.FEATcommand(_BwPI);				
 					break;
 				case "PWD":
-					BufferUtil.Write(_BwPI, "257 \"/\" is your current location");
+					zCommand.PWDcommand(_BwPI);
 					break;
 				case "TYPE":
-					if(Request.split("\\s")[1].equalsIgnoreCase("I")) {
-						BufferUtil.Write(_BwPI, "200 TYPE is now 8-bit binary");
-					}
-					else if(Request.split("\\s")[1].equalsIgnoreCase("A")) {
-						BufferUtil.Write(_BwPI, "200 TYPE is now ASCII");
-					}
+					String type = Request.split("\\s")[1];
+					zCommand.TYPEcommand(type, _BwPI);
 					break;
 				case "PASV":
-					int Port = _DTP.get_Port();
-					int a, b;
-					a = Port/256;
-					b = Port%256;
-					BufferUtil.Write(_BwPI, "227 Entering Passive Mode (127,0,0,1," + a + "," + b + ")");
+					int port = _DTP.get_Port();
+					zCommand.PASVcommand(port, _BwPI);
 					break;
 //				case "PORT":
 //					BufferUtil.Write(bw, "125 abc");
 //					break; 
 				case "LIST": 
-					PORTCommand();
-					ArrayList<String> listFileAndFolder = FilesUtil.ListFileAndFolder("H:\\CLIENT\\TEST_01");
-					for (String string : listFileAndFolder) {
-						BufferUtil.Write(_BwDTP, string);
-					}			
-					BufferUtil.Write(_BwPI, "226 Xong Port command");
-					_SocketDTP.close();
+					zCommand.LISTcommand_TLS(_DTP, _BwPI);
 					break;
 				case "CWD":
-					BufferUtil.Write(_BwPI, "250 Okay.");
+					zCommand.CWDcommand(_BwPI);
 					break;
 				case "RETR":
-					RETRCommand();
+					zCommand.RERTcommand(_DTP, _BwPI);
 					break;
 				case "PBSZ": // Tham so 0
-					BufferUtil.Write(_BwPI, "200 PBSZ 0 successful");
+					zCommand.PBSZcommand(_BwPI);
 					break;
 				case "PROT":
-					if(Request.split("\\s")[1].equalsIgnoreCase("P")) {
-						BufferUtil.Write(_BwPI, "200 Protection set to Private");
-					}
+					String protectMode = Request.split("\\s")[1];
+					zCommand.PROTcommand(protectMode, _BwPI);
 					break;
 					/*
 				case:
@@ -138,39 +106,38 @@ public class zPI_SSL extends Thread {
 		}
     	
     }
-    
-    private boolean checkLogin(User user) {
-    	return true;
-    }
-    
-    private void PORTCommand () throws IOException {
-    	_SocketDTP = _DTP.Accept();
-		_BwDTP = new BufferedWriter(new OutputStreamWriter(_SocketDTP.getOutputStream(), "UTF-8"));
-		BufferUtil.Write(_BwPI, "200 Port command");
-    }
-    
-    private void RETRCommand () throws IOException {
-    	// Tai sao lai ACCEPT, trong khi PORT dax ACCEPT
-    	_SocketDTP = _DTP.Accept();
-    	_BwDTP = new BufferedWriter(new OutputStreamWriter(_SocketDTP.getOutputStream(), "UTF-8"));
-    	BufferUtil.Write(_BwPI, "150 Opening");
-		String path = "H:\\CLIENT\\TEST_01\\Test_01_f_01.txt";
-		Send(path);
-		BufferUtil.Write(_BwPI, "226 Successfully transferred");
-		_SocketDTP.close();
-    }
-    
-    private void Send(String path) throws IOException {
-    	File f = new File(path);
-    	FileInputStream fin = new FileInputStream(f);
-        int c;
-        do {
-            c = fin.read();
-            if(c != -1)
-            	BufferUtil.Write(_BwDTP, String.valueOf(c));
-            else
-            	break;
-        } while(true);
-        fin.close();
-    }
 }
+    
+    
+    
+//    private void PORTCommand () throws IOException {
+//    	_SocketDTP = _DTP.Accept();
+//		_BwDTP = new BufferedWriter(new OutputStreamWriter(_SocketDTP.getOutputStream(), "UTF-8"));
+//		BufferUtil.Write(_BwPI, "200 Port command");
+//    }
+//    
+//    private void RETRCommand () throws IOException {
+//    	// Tai sao lai ACCEPT, trong khi PORT dax ACCEPT
+//    	_SocketDTP = _DTP.Accept();
+//    	_BwDTP = new BufferedWriter(new OutputStreamWriter(_SocketDTP.getOutputStream(), "UTF-8"));
+//    	BufferUtil.Write(_BwPI, "150 Opening");
+//		String path = "H:\\CLIENT\\TEST_01\\Test_01_f_01.txt";
+//		Send(path);
+//		BufferUtil.Write(_BwPI, "226 Successfully transferred");
+//		_SocketDTP.close();
+//    }
+//    
+//    private void Send(String path) throws IOException {
+//    	File f = new File(path);
+//    	FileInputStream fin = new FileInputStream(f);
+//        int c;
+//        do {
+//            c = fin.read();
+//            if(c != -1)
+//            	BufferUtil.Write(_BwDTP, String.valueOf(c));
+//            else
+//            	break;
+//        } while(true);
+//        fin.close();
+//    }
+//}
