@@ -22,14 +22,14 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import Server.PI;
 import Util.CONFIG;
 
-public class zManager_SSL {
+public class Manager_SSL extends Thread {
 	
 	public static final String KeystorePath = "C:\\Users\\Administrator\\KeyStore";
 	public static final String KeystorePassword = "ftpk16";
     private SSLServerSocket _ServerSocket = null;
     private SSLSocket _Socket = null;
 
-    public zManager_SSL(int port) throws IOException {
+    public Manager_SSL(int port) throws IOException {
     	
     	SetSystemProperty();
         ServerSocketFactory factory = SSLServerSocketFactory.getDefault();
@@ -39,16 +39,6 @@ public class zManager_SSL {
         CONFIG.print("PI->*" + _ServerSocket);
     }
     
-    public void listen() throws IOException {
-        while (true) {
-        	CONFIG.print("Waiting for Client...");
-            _Socket = (SSLSocket) _ServerSocket.accept();
-            CONFIG.print("PI->" + _Socket);
-            zPI_SSL st = new zPI_SSL(_Socket);
-            st.start();
-        }
-    }
-    
     private void SetSystemProperty() {
     	System.setProperty("javax.net.debug", "ssl,handshake");
         System.setProperty("javax.net.ssl.keyStore", KeystorePath);
@@ -56,18 +46,22 @@ public class zManager_SSL {
         System.setProperty("javax.net.ssl.keyStoreType", "PKCS12" );		
 	}
     
-//    public PrivateKey readPrivateKey(String filename) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException
-//    {
-//        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(readFileBytes(filename));
-//        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-//        return keyFactory.generatePrivate(keySpec);     
-//    }
-//    
-//    public byte[] readFileBytes(String filename) throws IOException
-//    {
-//        Path path = Paths.get(filename);
-//        return Files.readAllBytes(path);        
-//    }
-
+    @Override
+    public void run() {
+    	super.run();
+    	while (true) {
+        	CONFIG.print("Waiting for Client...");
+            try {
+				_Socket = (SSLSocket) _ServerSocket.accept();
+				CONFIG.print("PI->" + _Socket);
+	            PI_SSL st = new PI_SSL(_Socket);
+	            st.start();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            
+        }
+    }
 
 }

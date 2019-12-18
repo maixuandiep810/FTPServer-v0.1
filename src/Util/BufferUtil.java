@@ -10,6 +10,12 @@ public class BufferUtil {
 		_bw.newLine();
 		_bw.flush();
 	}
+	
+	public static void Write(BufferedWriter _bw, char _ch) throws IOException {
+		_bw.write(_ch);
+		_bw.flush();
+	}
+	
 	public static String Read(BufferedReader _br) throws IOException {
 		return _br.readLine();
 	}

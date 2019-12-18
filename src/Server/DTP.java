@@ -34,4 +34,10 @@ public class DTP {
 		CONFIG.print("DTP->" + ss);
 		return ss;
 	}
+	
+	public void Close() throws IOException {
+		if (_ServerSocket != null) {
+			_ServerSocket.close();
+		}
+	}
 }

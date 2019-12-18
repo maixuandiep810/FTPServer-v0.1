@@ -11,21 +11,25 @@ import java.io.OutputStreamWriter;
 
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import Util.*;
+import Model.BEAN.*;
 
 
 public class PI extends Thread {
 	public static int NumOfPI = 0;
     private Socket _SocketPI = null;
-    private DTP _DTP = null;
-    private Socket _SocketDTP = null;
     private BufferedReader _BrPI = null;
     private BufferedWriter _BwPI = null;
-    private BufferedReader _BrDTP = null;
-    private BufferedWriter _BwDTP = null;
-    private String _UserToken;
-    private String _UserSession;
+    private DTP _DTP = null;
+    
+    private String _BasePath;
+    private String _CurrentPath;
+    private HashMap<String, String> _Option;
+    
+    private String _Username;
+    private boolean _Validate;
     
     public PI(Socket socket) throws IOException {
     	NumOfPI++;
@@ -33,117 +37,125 @@ public class PI extends Thread {
     	_SocketPI = socket;
         _BrPI = new BufferedReader(new InputStreamReader(_SocketPI.getInputStream()));
         _BwPI = new BufferedWriter(new OutputStreamWriter(_SocketPI.getOutputStream()));
+        _Option = new HashMap<String, String>();
+        _Username = "";
+        _Validate = false;
     } 
     
-    public void run() {
+    public void run() {   	
+    	boolean checkLog = true; 
     	try {
 			BufferUtil.Write(_BwPI, "220 Connection established");
 			String Request = null;
-	    	String Command = null;
+	    	String cmd = null;
 	    	User user = new User();
 	    	while (true) {
 	        	Request = BufferUtil.Read(_BrPI);
 	        	System.out.println(Request);
-	        	Command = Request.split("\\s")[0];
-	        	switch (Command) {
-	        	
-	        	case "USER":
-					user.setUsername(Request.split("\\s")[1]);
-					zCommand.USERcommand(user, _BwPI);
+	        	cmd = Request.split("\\s")[0];
+	        	switch (cmd) {
+		        	case "USER":
+						user.setUsername(Request.split("\\s")[1]);
+						Command.USERcommand(user, _BwPI);
+						break;
+					case "PASS":
+						user.setPassword(Request.split("\\s")[1]);
+						_BasePath = Command.PASScommand(user, _BwPI);
+						if (_BasePath == null) {
+							checkLog = false;
+							break;
+						}
+						_Validate = true;
+						_CurrentPath = "\\";
+						_Option.put("AUTH", "PLAIN");
+						break;
+				}
+	        	if (checkLog == false) {
 					break;
-				case "PASS":
-					user.setPassword(Request.split("\\s")[1]);
-					zCommand.PASScommand(user, _BwPI);
-					break;
-				case "SYST":
-					BufferUtil.Write(_BwPI, "215 " + System.getProperty("os.name"));
-				case "FEAT":
-					BufferUtil.Write(_BwPI, "211-Features:");
-					BufferUtil.Write(_BwPI, "AUTH PLAIN");
-					BufferUtil.Write(_BwPI, "CCC");
-					BufferUtil.Write(_BwPI, "CLNT");
-					BufferUtil.Write(_BwPI, "EPRT");
-					BufferUtil.Write(_BwPI, "PASV");
-					BufferUtil.Write(_BwPI, "211 End");					
-					break;
-				case "PWD":
-					BufferUtil.Write(_BwPI, "257 \"/\" is your current location");
-					break;
-				case "TYPE":
-					if(Request.split("\\s")[1].equalsIgnoreCase("I")) {
-						BufferUtil.Write(_BwPI, "200 TYPE is now 8-bit binary");
-					}
-					else if(Request.split("\\s")[1].equalsIgnoreCase("A")) {
-						BufferUtil.Write(_BwPI, "200 TYPE is now ASCII");
-					}
-					break;
-				case "PASV":
-					int Port = _DTP.get_Port();
-					int a, b;
-					a = Port/256;
-					b = Port%256;
-					BufferUtil.Write(_BwPI, "227 Entering Passive Mode (127,0,0,1," + a + "," + b + ")");
-					break;
-//				case "PORT":
-//					BufferUtil.Write(bw, "125 abc");
-//					break; 
-				case "LIST": 
-					PORTCommand();
-					ArrayList<String> listFileAndFolder = FilesUtil.ListFileAndFolder("H:\\CLIENT\\TEST_01");
-					for (String string : listFileAndFolder) {
-						BufferUtil.Write(_BwDTP, string);
-					}			
-					BufferUtil.Write(_BwPI, "226 Xong Port command");
-					_SocketDTP.close();
-					break;
-				case "CWD":
-					BufferUtil.Write(_BwPI, "250 Okay.");
-					break;
-				case "RETR":
-					RETRCommand();
-					break;
-					/*
-				case:
-					BufferUtil.Write(bw, "");
-					break;
-					*/
-				default:
-					break;
-				}	    			
+				}
+	        	if (_Validate == true) {
+	        		switch (cmd) {
+						case "SYST":
+							Command.SYSTcommand(_BwPI);
+						case "FEAT":
+							Command.FEATcommand(_Option.get("AUTH"), _BwPI);				
+							break;
+						case "PWD":
+							Command.PWDcommand(_CurrentPath, _BwPI);
+							break;
+						case "TYPE":
+							String type = Request.split("\\s")[1];
+							if ((type = Command.TYPEcommand(type, _BwPI)) == "") {
+							}
+							else {
+								_Option.put("TYPE", type);
+							}
+							break;
+						case "PASV":
+							int port = _DTP.get_Port();
+							Command.PASVcommand(port, _BwPI);
+							break;
+	//					case "PORT":
+	//						BufferUtil.Write(bw, "125 abc");
+	//						break; 
+						case "LIST": 
+							Command.LISTcommand_PLAIN(_Option.get("AUTH"), _BasePath, _CurrentPath, _DTP, null, _BwPI);
+							break;
+						case "CWD":
+							String currentPath = Request.split("\\s")[1];
+							if (currentPath.charAt(0) != '\\') {
+								currentPath = _CurrentPath + "\\" + currentPath;
+							}
+							if ( (currentPath = Command.CWDcommand(_BasePath, currentPath, _BwPI)) != null) {
+								_CurrentPath = currentPath;
+							}
+							break;
+						case "CDUP": 
+							if ((currentPath = Command.CDUPcommand(_BasePath, _CurrentPath, _BwPI)) != null) {
+								_CurrentPath = currentPath;
+							}
+							break;
+						case "RETR":
+							String fileName = Request.substring(5);
+							Command.RERTcommand_PLAIN(_BasePath, _CurrentPath, fileName, _Option.get("TYPE"),  _DTP, _BwPI);
+							break;
+							
+						case "STOR":
+							fileName = Request.split("\\s")[1];
+							Command.STORcommand_PLAIN(_BasePath, _CurrentPath, fileName, _DTP, _BwPI);
+							break;	
+							
+						case "PBSZ": // Tham so 0
+							Command.PBSZcommand(_BwPI);
+							break;
+						case "PROT":
+							String protectMode = Request.split("\\s")[1];
+							Command.PROTcommand(protectMode, _BwPI);
+							break;
+							/*
+						case:
+							BufferUtil.Write(bw, "");
+							break;
+							*/
+						default:
+							break;
+					}	    			
+				}
 	    	}
 		} catch (IOException e) {
 			CONFIG.print(e.toString());
-		}
-    	
-    }
-    
-    private void PORTCommand () throws IOException {
-    	_SocketDTP = _DTP.Accept();
-		_BwDTP = new BufferedWriter(new OutputStreamWriter(_SocketDTP.getOutputStream()));
-		BufferUtil.Write(_BwPI, "200 Port command");
-    }
-    
-    private void RETRCommand () throws IOException {
-    	_SocketDTP = _DTP.Accept();
-    	_BwDTP = new BufferedWriter(new OutputStreamWriter(_SocketDTP.getOutputStream()));
-    	BufferUtil.Write(_BwPI, "150 Opening");
-		String path = "H:\\CLIENT\\TEST_01\\Test_01_f_01.txt";
-		Send(path);
-		BufferUtil.Write(_BwPI, "226 Successfully transferred");
-		_SocketDTP.close();
-    }
-    
-    private void Send(String path) throws IOException {
-    	File f = new File(path);
-    	FileInputStream fin = new FileInputStream(f);
-        int c;
-        do {
-            c = fin.read();
-            if(c != -1)
-            	BufferUtil.Write(_BwDTP, String.valueOf(c));
-            else
-            	break;
-        } while(true);
-        fin.close();
+			System.err.println(e);
+		} finally {
+			try {
+				if (_SocketPI != null) {
+					_SocketPI.close();
+				}
+				if (_DTP != null) {
+					_DTP.Close();
+				}
+			} catch (IOException e2) {
+			}
+		}	
+    NumOfPI--;
     }
 }

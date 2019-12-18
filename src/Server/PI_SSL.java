@@ -15,12 +15,13 @@ import java.util.ArrayList;
 import javax.net.ssl.SSLSocket;
 
 import Util.*;
+import Model.BEAN.*;
 
 
-public class zPI_SSL extends Thread {
+public class PI_SSL extends Thread {
 	public static int NumOfPI = 0;
     private SSLSocket _SocketPI = null;
-    private zDTP_SSL _DTP = null;
+    private DTP_SSL _DTP = null;
 
     private BufferedReader _BrPI = null;
     private BufferedWriter _BwPI = null;
@@ -28,9 +29,9 @@ public class zPI_SSL extends Thread {
     private String _UserToken;
     private String _UserSession;
     
-    public zPI_SSL(SSLSocket socket) throws IOException {
+    public PI_SSL(SSLSocket socket) throws IOException {
     	NumOfPI++;
-    	_DTP = new zDTP_SSL(10000 + NumOfPI);
+    	_DTP = new DTP_SSL(10000 + NumOfPI);
     	_SocketPI = socket;
         _BrPI = new BufferedReader(new InputStreamReader(_SocketPI.getInputStream(), "UTF-8"));
         _BwPI = new BufferedWriter(new OutputStreamWriter(_SocketPI.getOutputStream(), "UTF-8"));
@@ -41,56 +42,56 @@ public class zPI_SSL extends Thread {
     	try {
 			BufferUtil.Write(_BwPI, "220 Connection established");
 			String Request = null;
-	    	String Command = null;
+	    	String cmd = null;
 	    	User user = new User();
 	    	while (true) {
 	        	Request = BufferUtil.Read(_BrPI);
 	        	System.out.println(Request);
-	        	Command = Request.split("\\s")[0];
-	        	switch (Command) {
+	        	cmd = Request.split("\\s")[0];
+	        	switch (cmd) {
 	        	
 				case "USER":
 					user.setUsername(Request.split("\\s")[1]);
-					zCommand.USERcommand(user, _BwPI);
+					Command.USERcommand(user, _BwPI);
 					break;
 				case "PASS":
 					user.setPassword(Request.split("\\s")[1]);
-					zCommand.PASScommand(user, _BwPI);
+					Command.PASScommand(user, _BwPI);
 					break;
 				case "SYST":
-					zCommand.SYSTcommand(_BwPI);
+					Command.SYSTcommand(_BwPI);
 				case "FEAT":
-					zCommand.FEATcommand(_BwPI);				
+					Command.FEATcommand(_BwPI);				
 					break;
-				case "PWD":
-					zCommand.PWDcommand(_BwPI);
-					break;
+//				case "PWD":
+//					Command.PWDcommand(_BwPI);
+//					break;
 				case "TYPE":
 					String type = Request.split("\\s")[1];
-					zCommand.TYPEcommand(type, _BwPI);
+					Command.TYPEcommand(type, _BwPI);
 					break;
 				case "PASV":
 					int port = _DTP.get_Port();
-					zCommand.PASVcommand(port, _BwPI);
+					Command.PASVcommand(port, _BwPI);
 					break;
 //				case "PORT":
 //					BufferUtil.Write(bw, "125 abc");
 //					break; 
-				case "LIST": 
-					zCommand.LISTcommand_TLS(_DTP, _BwPI);
-					break;
-				case "CWD":
-					zCommand.CWDcommand(_BwPI);
-					break;
-				case "RETR":
-					zCommand.RERTcommand(_DTP, _BwPI);
-					break;
+//				case "LIST": 
+//					Command.LISTcommand_TLS(_DTP, _BwPI);
+//					break;
+//				case "CWD":
+//					Command.CWDcommand(_BwPI);
+//					break;
+//				case "RETR":
+//					Command.RERTcommand(_DTP, _BwPI);
+//					break;
 				case "PBSZ": // Tham so 0
-					zCommand.PBSZcommand(_BwPI);
+					Command.PBSZcommand(_BwPI);
 					break;
 				case "PROT":
 					String protectMode = Request.split("\\s")[1];
-					zCommand.PROTcommand(protectMode, _BwPI);
+					Command.PROTcommand(protectMode, _BwPI);
 					break;
 					/*
 				case:

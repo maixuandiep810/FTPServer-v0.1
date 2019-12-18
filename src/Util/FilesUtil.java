@@ -1,6 +1,7 @@
 package Util;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.*;
 
 import javax.swing.filechooser.FileSystemView;
@@ -92,16 +93,22 @@ public class FilesUtil {
 	        File f = new File(path);
 	        return f.isFile();
 	    }
-
+	/*
+	 * 
+	 */
+	public static String getParent(String path) {
+		return Paths.get(path).getParent().toString();
+	}
 	//
 	//
 	//
 	public static void main(String[] args) {
-		ArrayList<HashMap<String, String>> Result = new ArrayList<HashMap<String,String>>();
-		String path = "H:\\TEST";
-		//ListFolderAndSubFolder(Result, path, 0);
-		System.out.println(ListFolder(path));
-		System.out.println(ListFileAndFolder(path + "\\TEST_01"));
-		System.out.println(ListFile(path + "\\TEST_01\\TEST_01_a"));
+//		ArrayList<HashMap<String, String>> Result = new ArrayList<HashMap<String,String>>();
+//		String path = "H:\\TEST";
+//		//ListFolderAndSubFolder(Result, path, 0);
+//		System.out.println(ListFolder(path));
+//		System.out.println(ListFileAndFolder(path + "\\TEST_01"));
+//		System.out.println(ListFile(path + "\\TEST_01\\TEST_01_a"));
+		System.out.println(getParent("Administrator\\Desktop\\138\\Ay"));
 	}
 }

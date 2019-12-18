@@ -8,8 +8,7 @@ public class Test_Server_PI_SSL {
 
 	public static void main(String[] args) {
 		try {
-			zManager_SSL s = new zManager_SSL(21);
-			s.listen();
+			Manager_SSL s = new Manager_SSL(21);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
