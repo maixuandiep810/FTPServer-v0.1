@@ -6,7 +6,7 @@ import java.net.Socket;
 
 import Util.CONFIG;
 
-public class DTP {
+public class DTP_PLAIN {
 	private ServerSocket _ServerSocket;
 	private int _Port; 
 	private String _CurrentPath;
@@ -21,7 +21,7 @@ public class DTP {
 	 * 
 	 * 
 	 */
-	public DTP(int port) throws IOException {
+	public DTP_PLAIN(int port) throws IOException {
 		super();
 		_ServerSocket = new ServerSocket(port);
 		_Port = _ServerSocket.getLocalPort();

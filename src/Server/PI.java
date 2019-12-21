@@ -19,26 +19,37 @@ import Model.BEAN.*;
 
 public class PI extends Thread {
 	public static int NumOfPI = 0;
-    private Socket _SocketPI = null;
-    private BufferedReader _BrPI = null;
-    private BufferedWriter _BwPI = null;
-    private DTP _DTP = null;
+    protected Socket _SocketPI = null;
+    protected BufferedReader _BrPI = null;
+    protected BufferedWriter _BwPI = null;
+    protected DTP_PLAIN _DTP_PLAIN = null;
+    protected DTP_SSL _DTP_SSL = null;
     
-    private String _BasePath;
-    private String _CurrentPath;
-    private HashMap<String, String> _Option;
     
-    private String _Username;
-    private boolean _Validate;
+    protected String _BasePath;
+    protected String _CurrentPath;
+    protected HashMap<String, String> _Option;
     
-    public PI(Socket socket) throws IOException {
+    protected boolean _Validate;
+    private static final String TLS = "TLS";
+	private static final String PLAIN = "PLAIN";
+	
+    public PI(Socket socket, String auth) throws IOException {
+    	NumOfPI = (NumOfPI >= 50000) ? 0 : NumOfPI;
     	NumOfPI++;
-    	_DTP = new DTP(10000 + NumOfPI);
+    	_Option = new HashMap<String, String>();
+    	_Option.put("AUTH", auth);
+    	switch (auth) {
+		case PLAIN:
+			_DTP_PLAIN = new DTP_PLAIN(10000 + NumOfPI);
+			break;
+		case TLS:
+			_DTP_SSL = new DTP_SSL(10000 + NumOfPI);
+			break;
+    	}
     	_SocketPI = socket;
         _BrPI = new BufferedReader(new InputStreamReader(_SocketPI.getInputStream()));
         _BwPI = new BufferedWriter(new OutputStreamWriter(_SocketPI.getOutputStream()));
-        _Option = new HashMap<String, String>();
-        _Username = "";
         _Validate = false;
     } 
     
@@ -49,8 +60,12 @@ public class PI extends Thread {
 			String Request = null;
 	    	String cmd = null;
 	    	User user = new User();
-	    	while (true) {
+	    	boolean quit = false;
+	    	while (quit == false) {
 	        	Request = BufferUtil.Read(_BrPI);
+	        	if (Request == null) {
+					break;
+				}
 	        	System.out.println(Request);
 	        	cmd = Request.split("\\s")[0];
 	        	switch (cmd) {
@@ -67,7 +82,6 @@ public class PI extends Thread {
 						}
 						_Validate = true;
 						_CurrentPath = "\\";
-						_Option.put("AUTH", "PLAIN");
 						break;
 				}
 	        	if (checkLog == false) {
@@ -92,37 +106,45 @@ public class PI extends Thread {
 							}
 							break;
 						case "PASV":
-							int port = _DTP.get_Port();
+							int port = 0;;
+							switch (_Option.get("AUTH")) {
+								case PLAIN:
+									port = _DTP_PLAIN.get_Port(); 
+									break;
+								case TLS:
+									port = _DTP_SSL.get_Port();
+									break;
+					    	}
 							Command.PASVcommand(port, _BwPI);
 							break;
 	//					case "PORT":
 	//						BufferUtil.Write(bw, "125 abc");
 	//						break; 
 						case "LIST": 
-							Command.LISTcommand_PLAIN(_Option.get("AUTH"), _BasePath, _CurrentPath, _DTP, null, _BwPI);
+							Command.LISTcommand(_Option.get("AUTH"), _BasePath, _CurrentPath, _DTP_PLAIN, _DTP_SSL, _BwPI);
 							break;
 						case "CWD":
-							String currentPath = Request.split("\\s")[1];
-							if (currentPath.charAt(0) != '\\') {
-								currentPath = _CurrentPath + "\\" + currentPath;
+							String tempPath = Request.split("\\s")[1];
+							if (tempPath.charAt(0) != '\\') {
+								tempPath = _CurrentPath + "\\" + tempPath;
 							}
-							if ( (currentPath = Command.CWDcommand(_BasePath, currentPath, _BwPI)) != null) {
-								_CurrentPath = currentPath;
+							if ( (tempPath = Command.CWDcommand(_BasePath, tempPath, _BwPI)) != null) {
+								_CurrentPath = tempPath;
 							}
 							break;
 						case "CDUP": 
-							if ((currentPath = Command.CDUPcommand(_BasePath, _CurrentPath, _BwPI)) != null) {
-								_CurrentPath = currentPath;
+							if ((tempPath = Command.CDUPcommand(_BasePath, _CurrentPath, _BwPI)) != null) {
+								_CurrentPath = tempPath;
 							}
 							break;
 						case "RETR":
 							String fileName = Request.substring(5);
-							Command.RERTcommand_PLAIN(_BasePath, _CurrentPath, fileName, _Option.get("TYPE"),  _DTP, _BwPI);
+							Command.RERTcommand(_Option.get("AUTH"), _Option.get("TYPE"), _BasePath, _CurrentPath, fileName,  _DTP_PLAIN, _DTP_SSL, _BwPI);
 							break;
 							
 						case "STOR":
-							fileName = Request.split("\\s")[1];
-							Command.STORcommand_PLAIN(_BasePath, _CurrentPath, fileName, _DTP, _BwPI);
+							fileName = Request.substring(5);
+							Command.STORcommand(_Option.get("AUTH"), _Option.get("TYPE"), _BasePath, _CurrentPath, fileName,  _DTP_PLAIN, _DTP_SSL, _BwPI);
 							break;	
 							
 						case "PBSZ": // Tham so 0
@@ -131,6 +153,32 @@ public class PI extends Thread {
 						case "PROT":
 							String protectMode = Request.split("\\s")[1];
 							Command.PROTcommand(protectMode, _BwPI);
+							break;
+						case "MKD":
+							String folderName = Request.substring(4);
+							Command.MKDcommand(_BasePath, _CurrentPath, folderName, _BwPI);
+							break;
+						case "RMD":
+							folderName = Request.substring(4);
+							Command.RMDcommand(_BasePath, _CurrentPath, folderName, _BwPI);
+							break;
+						case "DELE":
+							fileName = Request.substring(5);
+							Command.DELEcommand(_BasePath, _CurrentPath, fileName, _BwPI);
+							break;
+						case "RNFR":
+							fileName = Request.substring(5);
+							if (Command.RNFRcommand(_BasePath, _CurrentPath, fileName, _BwPI)) {
+								_Option.put("RNFR", fileName);
+							}
+							break;
+						case "RNTO":
+							fileName = Request.substring(5);
+							Command.RNTOcommand(_BasePath, _CurrentPath, _Option.get("RNFR"), fileName, _BwPI);
+							break;
+						case "QUIT":
+							quit = true;
+							BufferUtil.Write(_BwPI, "221 BYE");
 							break;
 							/*
 						case:
@@ -145,17 +193,6 @@ public class PI extends Thread {
 		} catch (IOException e) {
 			CONFIG.print(e.toString());
 			System.err.println(e);
-		} finally {
-			try {
-				if (_SocketPI != null) {
-					_SocketPI.close();
-				}
-				if (_DTP != null) {
-					_DTP.Close();
-				}
-			} catch (IOException e2) {
-			}
 		}	
-    NumOfPI--;
     }
 }

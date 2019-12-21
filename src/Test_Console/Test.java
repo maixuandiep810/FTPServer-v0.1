@@ -8,8 +8,8 @@ public class Test {
 
 	public static void main(String[] args) {
 		try {
-			Manager_Plain s = new Manager_Plain(21);
-			s.start();
+			//Manager_PLAIN s = new Manager_PLAIN(2222);
+			//s.start();
 			Manager_SSL ss = new Manager_SSL(990);
 			ss.start();
 		} catch (IOException e) {

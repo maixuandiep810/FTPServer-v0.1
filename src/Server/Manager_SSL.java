@@ -54,7 +54,7 @@ public class Manager_SSL extends Thread {
             try {
 				_Socket = (SSLSocket) _ServerSocket.accept();
 				CONFIG.print("PI->" + _Socket);
-	            PI_SSL st = new PI_SSL(_Socket);
+	            PI st = new PI(_Socket, "TLS");
 	            st.start();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

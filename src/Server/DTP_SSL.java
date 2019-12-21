@@ -47,4 +47,7 @@ public class DTP_SSL {
 		CONFIG.print("DTP->" + ss);
 		return ss;
 	}
+	public void Close() throws IOException {
+		_ServerSocket.close();
+	}
 }

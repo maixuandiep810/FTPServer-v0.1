@@ -11,6 +11,16 @@ public class BufferUtil {
 		_bw.flush();
 	}
 	
+	public static void Write_No_Newline(BufferedWriter _bw, String _str) throws IOException {
+		_bw.write(_str);
+	}
+	
+	public static void Write_Newline(BufferedWriter _bw) throws IOException {
+		_bw.newLine();
+		_bw.flush();
+	}
+
+	
 	public static void Write(BufferedWriter _bw, char _ch) throws IOException {
 		_bw.write(_ch);
 		_bw.flush();
