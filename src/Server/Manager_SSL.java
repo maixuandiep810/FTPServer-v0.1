@@ -24,8 +24,8 @@ import Util.CONFIG;
 
 public class Manager_SSL extends Thread {
 	
-	public static final String KeystorePath = "C:\\Users\\Administrator\\KeyStore";
-	public static final String KeystorePassword = "ftpk16";
+	private static final String KeystorePath = "C:\\Users\\Administrator\\KeyStore";
+	private static final String KeystorePassword = "ftpk16";
     private SSLServerSocket _ServerSocket = null;
     private SSLSocket _Socket = null;
 
@@ -50,14 +50,13 @@ public class Manager_SSL extends Thread {
     public void run() {
     	super.run();
     	while (true) {
-        	CONFIG.print("Waiting for Client...");
+        	CONFIG.print("FTPS Server - Waiting for Client...");
             try {
 				_Socket = (SSLSocket) _ServerSocket.accept();
 				CONFIG.print("PI->" + _Socket);
 	            PI st = new PI(_Socket, "TLS");
 	            st.start();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
             

@@ -156,6 +156,16 @@ public class FilesUtil {
 	//
 	//
 	//
+	
+	public static String getAbsoluteFilePath(String basePath, String currentPath, String fileName) {
+		String path = basePath;
+		path += currentPath.equalsIgnoreCase("\\") ? "" : currentPath; 
+		path += "\\" + fileName;
+		return path;
+	}
+	
+	
+	
 	public static void main(String[] args) {
 //		ArrayList<HashMap<String, String>> Result = new ArrayList<HashMap<String,String>>();
 		String path = "H:\\TEST";
@@ -167,11 +177,5 @@ public class FilesUtil {
 		//System.out.println(isExistFolder(path + "\\abc"));
 		System.out.println(mkdFolder(path + "\\abc"));
 		
-	}
-	public static String getAbsoluteFilePath(String basePath, String currentPath, String fileName) {
-		String path = basePath;
-		path += currentPath.equalsIgnoreCase("\\") ? "" : currentPath; 
-		path += "\\" + fileName;
-		return path;
 	}
 }

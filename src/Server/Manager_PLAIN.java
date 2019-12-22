@@ -21,13 +21,13 @@ public class Manager_PLAIN extends Thread {
     public void run() {
     	super.run();
     	 while (true) {
+    		 CONFIG.print("FTP Server - Waiting for Client...");
              try {
 				_Socket = _ServerSocket.accept();
 				CONFIG.print("PI->" + _Socket);
 	             PI st = new PI(_Socket, "PLAIN");
 	             st.start();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
          }

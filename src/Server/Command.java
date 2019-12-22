@@ -22,6 +22,7 @@ import javax.net.ssl.SSLSocket;
 import Model.BO.CheckLoginBO;
 import Model.BO.UserPathBO;
 import Util.BufferUtil;
+import Util.CONFIG;
 import Util.FilesUtil;
 import Model.BEAN.*;
 
@@ -115,7 +116,8 @@ public class Command {
 		int a, b;
 		a = port/256;
 		b = port%256;
-		BufferUtil.Write(bwPI, "227 Entering Passive Mode (127,0,0,1," + a + "," + b + ")");
+		String host = CONFIG.MY_HOST.replaceAll("\\.", ",");
+		BufferUtil.Write(bwPI, "227 Entering Passive Mode (" + host + "," + a + "," + b + ")");
 	}
 	/**
 	 * 
@@ -135,7 +137,7 @@ public class Command {
 				break;
 		}
 		String path = basePath + currentPath;
-		BufferUtil.Write(bwPI, "200 Port command");
+		BufferUtil.Write(bwPI, "200 List command");
 		ArrayList<String> listFileAndFolder = FilesUtil.ListFileAndFolder(path);	
 		for (String string : listFileAndFolder) {
 			if (FilesUtil.isFolder(path + "\\" + string)) { //13bytes
@@ -146,6 +148,12 @@ public class Command {
 			}
 		}	
 		BufferUtil.Write(bwPI, "226 LIST command success");
+		if (socketDTP != null) {
+			socketDTP.close();
+		}
+		if (socketDTP_SSL != null) {
+			socketDTP_SSL.close();
+		}
 	}
 	/**
 	 * Chi chuyen den duong dan SUB FOLDER
@@ -202,6 +210,12 @@ public class Command {
 		String path = FilesUtil.getAbsoluteFilePath(basePath, currentPath, fileName);
 		Send(dosDTP, bwDTP, path, type);
 		BufferUtil.Write(bwPI, "226 Successfully transferred");
+		if (socketDTP != null) {
+			socketDTP.close();
+		}
+		if (socketDTP_SSL != null) {
+			socketDTP_SSL.close();
+		}
 	}
 	public static void STORcommand(String auth, String type, String basePath, String currentPath, String fileName, DTP_PLAIN dTP, DTP_SSL dTP_SSL, BufferedWriter bwPI) throws IOException {
 		BufferedReader brDTP = null;
@@ -229,6 +243,12 @@ public class Command {
 		String path = FilesUtil.getAbsoluteFilePath(basePath, currentPath, fileName);
 		Receive(dinDTP, brDTP, path, type);
 		BufferUtil.Write(bwPI, "226 Successfully transferred");
+		if (socketDTP != null) {
+			socketDTP.close();
+		}
+		if (socketDTP_SSL != null) {
+			socketDTP_SSL.close();
+		}
 	}
 	/**
 	 * 
@@ -322,29 +342,7 @@ public class Command {
 		}
 	}
 	
-	/**
-	 * 
-	 */
-	private static boolean _CheckUser(User user) {
-		CheckLoginBO checkLoginBO = new CheckLoginBO();
-    	return checkLoginBO.isValidUser(user.getUsername());
-    }
-	/**
-	 * 
-	 */
-	private static boolean _CheckPass(User user) {
-		CheckLoginBO checkLoginBO = new CheckLoginBO();
-    	return checkLoginBO.isValidPassword(user.getUsername(), user.getPassword());
-    }
-	public static void RMDcommand(String basePath, String currentPath, String folderName, BufferedWriter bwPI) throws IOException {
-		String path = FilesUtil.getAbsoluteFilePath(basePath, currentPath, folderName);
-		if (FilesUtil.isExistFile(path) == true && FilesUtil.deleteFolder(path)) {
-				BufferUtil.Write(bwPI, "250 " + folderName + " : The directory was successfully created.");
-		}
-		else {
-			BufferUtil.Write(bwPI, "550 the deletion failed.");
-		}
-	}
+	
 	public static void DELEcommand(String basePath, String currentPath, String fileName, BufferedWriter bwPI) throws IOException {
 		String path = FilesUtil.getAbsoluteFilePath(basePath, currentPath, fileName);
 		if (FilesUtil.isExistFile(path) == true && FilesUtil.deleteFile(path)) {
@@ -375,6 +373,30 @@ public class Command {
 		else {
 			BufferUtil.Write(bwPI, "550 Failed.");
 			return false;
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	private static boolean _CheckUser(User user) {
+		CheckLoginBO checkLoginBO = new CheckLoginBO();
+    	return checkLoginBO.isValidUser(user.getUsername());
+    }
+	/**
+	 * 
+	 */
+	private static boolean _CheckPass(User user) {
+		CheckLoginBO checkLoginBO = new CheckLoginBO();
+    	return checkLoginBO.isValidPassword(user.getUsername(), user.getPassword());
+    }
+	public static void RMDcommand(String basePath, String currentPath, String folderName, BufferedWriter bwPI) throws IOException {
+		String path = FilesUtil.getAbsoluteFilePath(basePath, currentPath, folderName);
+		if (FilesUtil.isExistFile(path) == true && FilesUtil.deleteFolder(path)) {
+				BufferUtil.Write(bwPI, "250 " + folderName + " : The directory was successfully created.");
+		}
+		else {
+			BufferUtil.Write(bwPI, "550 the deletion failed.");
 		}
 	}
 	

@@ -12,11 +12,10 @@ import javax.net.ssl.SSLSocket;
 import Util.CONFIG;
 
 public class DTP_SSL {
-	public static final String KeystorePath = "C:\\Users\\Administrator\\KeyStore";
-	public static final String KeystorePassword = "ftpk16";
+	private static final String KeystorePath = "C:\\Users\\Administrator\\KeyStore";
+	private static final String KeystorePassword = "ftpk16";
     private SSLServerSocket _ServerSocket = null;
 	private int _Port; 
-	private String _CurrentPath;
 	/**
 	 * 
 	 * 
@@ -39,7 +38,6 @@ public class DTP_SSL {
         _ServerSocket.setEnabledProtocols(new String[] {"TLSv1"});
 		_Port = _ServerSocket.getLocalPort();
 		CONFIG.print("DTP->*" + _ServerSocket);
-		_CurrentPath = null;
 	}
 	
 	public SSLSocket Accept() throws IOException {

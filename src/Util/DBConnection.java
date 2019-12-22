@@ -9,7 +9,7 @@ import java.sql.Statement;
 public class DBConnection {
 	
 	private static final String _DriverName = "com.mysql.jdbc.Driver";
-	private static final String _Url = "jdbc:mysql://localhost:3306/a";
+	private static final String _Url = "jdbc:mysql://localhost:3306/ftp_server";
 	private static final String _Username = "root";
 	private static final String _Password = "";
 	/**

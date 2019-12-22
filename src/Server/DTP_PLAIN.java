@@ -9,7 +9,6 @@ import Util.CONFIG;
 public class DTP_PLAIN {
 	private ServerSocket _ServerSocket;
 	private int _Port; 
-	private String _CurrentPath;
 	/**
 	 * 
 	 * 
@@ -26,7 +25,6 @@ public class DTP_PLAIN {
 		_ServerSocket = new ServerSocket(port);
 		_Port = _ServerSocket.getLocalPort();
 		CONFIG.print("DTP->*" + _ServerSocket);
-		_CurrentPath = null;
 	}
 	
 	public Socket Accept() throws IOException {

@@ -19,18 +19,18 @@ import Model.BEAN.*;
 
 public class PI extends Thread {
 	public static int NumOfPI = 0;
-    protected Socket _SocketPI = null;
-    protected BufferedReader _BrPI = null;
-    protected BufferedWriter _BwPI = null;
-    protected DTP_PLAIN _DTP_PLAIN = null;
-    protected DTP_SSL _DTP_SSL = null;
+    private Socket _SocketPI = null;
+    private BufferedReader _BrPI = null;
+    private BufferedWriter _BwPI = null;
+    private DTP_PLAIN _DTP_PLAIN = null;
+    private DTP_SSL _DTP_SSL = null;
     
     
-    protected String _BasePath;
-    protected String _CurrentPath;
-    protected HashMap<String, String> _Option;
+    private String _BasePath;
+    private String _CurrentPath;
+    private HashMap<String, String> _Option;
     
-    protected boolean _Validate;
+    private boolean _Validate;
     private static final String TLS = "TLS";
 	private static final String PLAIN = "PLAIN";
 	
@@ -191,8 +191,7 @@ public class PI extends Thread {
 				}
 	    	}
 		} catch (IOException e) {
-			CONFIG.print(e.toString());
-			System.err.println(e);
+			e.printStackTrace();
 		}	
     }
 }
